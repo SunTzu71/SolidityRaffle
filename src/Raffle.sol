@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.26;
+pragma solidity 0.8.19;
 
 import {VRFConsumerBaseV2Plus} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
@@ -33,7 +33,6 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint32 private constant NUM_WORDS = 1;
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
-    bytes2 private immutable i_keyhash;
     uint32 private immutable i_callbackGasLimit;
     uint256 private i_subscriptionId;
     bytes32 private i_gasLane;
@@ -179,5 +178,15 @@ contract Raffle is VRFConsumerBaseV2Plus {
      */
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
+    }
+
+    /**
+     * function getRaffleState
+     * @notice Returns the current state of the raffle
+     * @dev Returns current RaffleState enum value from s_raffleState
+     * @return RaffleState Current state of the raffle (Open or Calculating)
+     */
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
     }
 }

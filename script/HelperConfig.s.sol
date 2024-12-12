@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
@@ -8,7 +8,7 @@ abstract contract CodeConstants {
     // VRF mock values
     uint96 public MOCK_BASE_FEE = 0.1 ether;
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
-    int256 pulic MOCK_WEI_PER_UNIT_LINK = 4e15;
+    int256 public MOCK_WEI_PER_UNIT_LINK = 4e15;
 
     uint256 public constant CHAIN_ID_SEPOLIA = 11155111;
     uint256 public constant CHAIN_ID_LOCAL = 31337;
@@ -69,10 +69,14 @@ contract HelperConfig is CodeConstants, Script {
 
         // Deploy VRF Coordinator Mock
         vm.startBroadcast();
-        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UNIT_LINK);
+        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+            MOCK_BASE_FEE,
+            MOCK_GAS_PRICE_LINK,
+            MOCK_WEI_PER_UNIT_LINK
+        );
         vm.stopBroadcast();
 
-         localNetworkConfig = NetworkConfig({
+        localNetworkConfig = NetworkConfig({
             entranceFee: 0.01 ether, // 1e16
             interval: 30, // 30 seconds
             vrfCoordinator: address(vrfCoordinatorMock),
