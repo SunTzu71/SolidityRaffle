@@ -53,6 +53,11 @@ contract CreateSubscription is Script {
 contract FundSubscription is Script, CodeConstants {
     uint256 public constant FUND_AMOUNT = 3 ether;
 
+    /**
+     * @notice Funds a VRF subscription using configuration from HelperConfig
+     * @dev Retrieves VRF Coordinator, subscription ID and LINK token address from config
+     * and calls fundSubscription with those parameters
+     */
     function fundSubscriptionUsingConfig() public {
         HelperConfig helperConfig = new HelperConfig();
         address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
@@ -62,6 +67,13 @@ contract FundSubscription is Script, CodeConstants {
         fundSubscription(vrfCoordinator, subscriptionId, link);
     }
 
+    /**
+     * @notice Funds a VRF subscription using the provided VRF Coordinator, subscription ID and LINK token address
+     * @param vrfCoordinator The address of the VRF Coordinator contract
+     * @param subscriptionId The ID of the subscription to fund
+     * @param linkToken The address of the LINK token contract
+     * @dev Uses mock VRF coordinator for local chains, real LINK token transfer for other chains
+     */
     function fundSubscription(
         address vrfCoordinator,
         uint256 subscriptionId,
@@ -89,6 +101,9 @@ contract FundSubscription is Script, CodeConstants {
         }
     }
 
+    /**
+     * @notice Required entry point for running the script that funds a VRF subscription
+     */
     function run() public {
         fundSubscriptionUsingConfig();
     }
