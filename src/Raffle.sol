@@ -189,4 +189,14 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function getRaffleState() public view returns (RaffleState) {
         return s_raffleState;
     }
+
+    /**
+     * function getPlayer
+     * @dev Returns address from s_players array at specified index
+     * @param index The index of the player to return
+     * @return address The address of the player at the specified index
+     */
+    function getPlayer(uint256 index) public view returns (address) {
+        return s_players[index];
+    }
 }
