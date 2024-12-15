@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {HelperConfig, CodeConstants} from "./HelperConfig.s.sol";
 import {VRFCoordinatorV2_5Mock} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/mocks/LinkToken.sol";
+import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 
 contract CreateSubscription is Script {
     /**
@@ -106,5 +107,55 @@ contract FundSubscription is Script, CodeConstants {
      */
     function run() public {
         fundSubscriptionUsingConfig();
+    }
+}
+
+contract AddConsumer is Script {
+    /**
+     * @notice Adds a consumer contract to a VRF subscription using configuration from HelperConfig
+     * @param mostRecentlyDeployed The address of the contract to add as a consumer
+     * @dev Retrieves subscription ID and VRF Coordinator from config and calls addConsumer
+     */
+    function addConsumerUsingConfig(address mostRecentlyDeployed) public {
+        HelperConfig helperConfig = new HelperConfig();
+        uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
+        addConsumer(mostRecentlyDeployed, vrfCoordinator, subscriptionId);
+    }
+
+    /**
+     * @notice Adds a consumer contract to a VRF subscription
+     * @param ContractToAddToVrf The address of the contract to add as a consumer
+     * @param vrfCoordinator The address of the VRF Coordinator contract
+     * @param subscriptionId The ID of the subscription to add the consumer to
+     * @dev Adds the specified contract as a consumer of the VRF subscription
+     */
+    function addConsumer(
+        address ContractToAddToVrf,
+        address vrfCoordinator,
+        uint256 subscriptionId
+    ) public {
+        console2.log("Adding consumer contrct: ", ContractToAddToVrf);
+        console2.log("To vrfCoordinator: ", vrfCoordinator);
+        console2.log("On chain id: ", block.chainid);
+
+        vm.startBroadcast();
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(
+            subscriptionId,
+            ContractToAddToVrf
+        );
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @notice Required entry point for running the script that adds a consumer to a VRF subscription
+     * @dev Gets most recently deployed Raffle contract and adds it as consumer
+     */
+    function run() external {
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment(
+            "Raffle",
+            block.chainid
+        );
+        addConsumerUsingConfig(mostRecentlyDeployed);
     }
 }
