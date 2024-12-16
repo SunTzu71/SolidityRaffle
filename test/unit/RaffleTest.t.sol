@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {Raffle} from "../../src/Raffle.sol";
 import {DeployRaffle} from "../../script/DeployRaffle.s.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 contract RaffleTest is Test {
     Raffle public raffle;
@@ -179,5 +180,36 @@ contract RaffleTest is Test {
             )
         );
         raffle.performUpkeep("");
+    }
+
+    /**
+     * @dev Modifier that simulates entering the raffle and advancing time
+     * Pranks as player to enter raffle with entrance fee
+     * Advances blockchain time and block number
+     * Executes modified function after setup
+     */
+    modifier raffleEntered() {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        _;
+    }
+
+    /**
+     * Tests that performUpkeep updates state and emits request ID
+     * Records logs during performUpkeep call to capture events
+     * Extracts requestId from event logs and checks state changes
+     * Verifies raffle state updates and valid requestId emitted
+     */
+    function testPerformUpkeepUpdatesRaffleStateEmitsRequestId() public {
+        vm.recordLogs();
+        raffle.performUpkeep("");
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 requestId = entries[1].topics[1];
+
+        Raffle.RaffleState rState = raffle.getRaffleState();
+        assert(uint256(requestId) > 0);
+        assert(uint256(rState) == 1);
     }
 }
