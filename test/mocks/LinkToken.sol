@@ -2,7 +2,7 @@
 // @dev This contract has been adapted to fit with foundry
 pragma solidity ^0.8.19;
 
-import {ERC20} from "../../../lib/solmate/src/tokens/ERC20.sol";
+import {ERC20} from "../../lib/solmate/src/tokens/ERC20.sol";
 
 interface ERC677Receiver {
     function onTokenTransfer(

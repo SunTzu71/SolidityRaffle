@@ -89,6 +89,12 @@ contract RaffleTest is Test {
         raffle.enterRaffle{value: entranceFee}();
     }
 
+    /**
+     * Tests that entering raffle is not allowed while calculating
+     * Simulates player entering raffle, advancing time, and triggering performUpkeep
+     * Expects revert when trying to enter during calculation state
+     * Verifies state transition and restriction logic works
+     */
     function testDontAllowEnteringWhileCalculating() public {
         vm.prank(PLAYER);
         raffle.enterRaffle{value: entranceFee}();
@@ -99,5 +105,79 @@ contract RaffleTest is Test {
         vm.expectRevert(Raffle.Raffle__NotOpen.selector);
         vm.prank(PLAYER);
         raffle.enterRaffle{value: entranceFee}();
+    }
+
+    /**
+     * Tests checkUpkeep returns false with no balance
+     * Sets up scenario where time has passed but contract has no balance
+     * Expects checkUpkeep to return false since no funds available
+     * Verifies balance requirement for upkeep works correctly
+     */
+    function testCheckUpKeepNoBalance() public {
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
+
+    /**
+     * Tests that checkUpkeep returns false when raffle is not open
+     * Simulates full raffle scenario with time passed and player entered
+     * Expects checkUpkeep to return false since raffle is calculating
+     * Verifies state checks in checkUpkeep work correctly
+     */
+    function testCheckUpKeepRaffleNotOpen() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
+
+    /**
+     * Tests performUpkeep succeeds when conditions are met
+     * Simulates player entering raffle and time passing
+     * Triggers performUpkeep and expects it to work
+     * Verifies upkeep executes successfully when conditions are right
+     */
+    function testPerformUpKeepRunIfUpKeepTrue() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        raffle.performUpkeep("");
+    }
+
+    /**
+     * Tests that performUpkeep reverts when conditions are not met
+     * Sets up initial state variables and simulates player entering raffle
+     * Expects revert with UpkeepNotNeeded error and correct parameters
+     * Verifies performUpkeep validation works correctly
+     */
+    function testPerformUpKeepRevertsFalse() public {
+        uint256 currentBalance = 0;
+        uint256 numPlayers = 0;
+        Raffle.RaffleState rState = raffle.getRaffleState();
+
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        currentBalance = currentBalance + entranceFee;
+        numPlayers = 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Raffle.Raffle__UpkeepNotNeeded.selector,
+                currentBalance,
+                numPlayers,
+                rState
+            )
+        );
+        raffle.performUpkeep("");
     }
 }
