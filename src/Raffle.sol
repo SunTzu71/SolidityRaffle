@@ -194,6 +194,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     /**
+     * function getRecentWinner
+     * @notice Returns the address of the most recent raffle winner
+     * @dev Returns the s_recentWinner state variable address
+     * @return address The address of the most recent winner
+     */
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
+    }
+
+    /**
      * function getPlayer
      * @dev Returns address from s_players array at specified index
      * @param index The index of the player to return
@@ -201,5 +211,15 @@ contract Raffle is VRFConsumerBaseV2Plus {
      */
     function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
+    }
+
+    /**
+     * function getLastTimeStamp
+     * @notice Returns the timestamp of the last raffle completion
+     * @dev Returns the s_lastTimeStamp state variable
+     * @return uint256 The last timestamp recorded in the contract
+     */
+    function getLastTimeStamp() external view returns (uint256) {
+        return s_lastTimeStamp;
     }
 }
