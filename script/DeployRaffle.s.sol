@@ -9,22 +9,24 @@ import {CreateSubscription, FundSubscription, AddConsumer} from "./Interactions.
 contract DeployRaffle is Script {
     function run() public returns (Raffle, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
+        AddConsumer addConsumer = new AddConsumer();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
 
         if (config.subscriptionId == 0) {
             CreateSubscription cs = new CreateSubscription();
             (config.subscriptionId, config.vrfCoordinator) = cs
-                .createSubscription(config.vrfCoordinator);
+                .createSubscription(config.vrfCoordinator, config.account);
 
             FundSubscription fs = new FundSubscription();
             fs.fundSubscription(
                 config.vrfCoordinator,
                 config.subscriptionId,
-                config.link
+                config.link,
+                config.account
             );
         }
 
-        vm.startBroadcast();
+        vm.startBroadcast(config.account);
         Raffle raffle = new Raffle(
             config.entranceFee,
             config.interval,
@@ -35,12 +37,11 @@ contract DeployRaffle is Script {
         );
         vm.stopBroadcast();
 
-        // No need for broadcast becase AddConsumer does it
-        AddConsumer ac = new AddConsumer();
-        ac.addConsumer(
+        addConsumer.addConsumer(
             address(raffle),
             config.vrfCoordinator,
-            config.subscriptionId
+            config.subscriptionId,
+            config.account
         );
 
         return (raffle, helperConfig);

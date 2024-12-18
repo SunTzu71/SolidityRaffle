@@ -11,6 +11,9 @@ abstract contract CodeConstants {
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
     int256 public MOCK_WEI_PER_UNIT_LINK = 4e15;
 
+    address public FOUNDRY_DEFAULT_SENDER =
+        0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
+
     uint256 public constant CHAIN_ID_SEPOLIA = 11155111;
     uint256 public constant CHAIN_ID_LOCAL = 31337;
 }
@@ -26,6 +29,7 @@ contract HelperConfig is CodeConstants, Script {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -60,7 +64,8 @@ contract HelperConfig is CodeConstants, Script {
                 gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, // https://docs.chain.link/vrf/v2-5/supported-networks - Sepolia testnet
                 callbackGasLimit: 500000, // 500k
                 subscriptionId: 0,
-                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+                account: 0x643315C9Be056cDEA171F4e7b2222a4ddaB9F88D // private key for sepolia testnet account - get from Metamask
             });
     }
 
@@ -87,9 +92,10 @@ contract HelperConfig is CodeConstants, Script {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             callbackGasLimit: 500000, // 500k
             subscriptionId: 0,
-            link: address(linkToken)
+            link: address(linkToken),
+            account: FOUNDRY_DEFAULT_SENDER
         });
-
+        vm.deal(localNetworkConfig.account, 100 ether);
         return localNetworkConfig;
     }
 }
