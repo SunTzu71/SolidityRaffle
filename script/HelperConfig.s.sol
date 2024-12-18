@@ -39,10 +39,17 @@ contract HelperConfig is CodeConstants, Script {
         networkConfig[CHAIN_ID_SEPOLIA] = getSepoliaEthConfig();
     }
 
+    /**
+     * @notice Retrieves network configuration based on chain ID
+     * @dev Returns Sepolia config if valid coordinator exists for chain ID,
+     * @dev returns Anvil mock config for local chain, otherwise reverts
+     * @param chainId The blockchain network ID to get config for
+     * @return NetworkConfig The network configuration for the specified chain
+     */
     function getConfigByChainId(
         uint256 chainId
     ) public returns (NetworkConfig memory) {
-        if (networkConfig[chainId].vrfCoordinator == address(0)) {
+        if (networkConfig[chainId].vrfCoordinator != address(0)) {
             return networkConfig[CHAIN_ID_SEPOLIA];
         } else if (chainId == CHAIN_ID_LOCAL) {
             return getCreateAnvilConfig();
@@ -51,10 +58,20 @@ contract HelperConfig is CodeConstants, Script {
         }
     }
 
+    /**
+     * @notice Returns network configuration for current chain
+     * @dev Uses block.chainid to determine current network and get config
+     * @return NetworkConfig struct containing network configuration parameters
+     */
     function getConfig() public returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
     }
 
+    /**
+     * @notice Returns Sepolia testnet network configuration
+     * @dev Contains hardcoded values for Sepolia VRF coordinator and parameters
+     * @return NetworkConfig Configuration struct with Sepolia testnet settings
+     */
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
         return
             NetworkConfig({
@@ -69,6 +86,13 @@ contract HelperConfig is CodeConstants, Script {
             });
     }
 
+    /**
+     * @notice Returns local Anvil network configuration with mock contracts
+     * @dev Deploys VRFCoordinator and Link token mocks if not already deployed
+     * @dev Caches local config to avoid redeploying mocks
+     * @dev Sets up mock contracts with test values and funds test account
+     * @return NetworkConfig Configuration struct with local test settings
+     */
     function getCreateAnvilConfig() public returns (NetworkConfig memory) {
         // Check if local network config is already set
         if (localNetworkConfig.vrfCoordinator != address(0)) {

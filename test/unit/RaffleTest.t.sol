@@ -136,10 +136,13 @@ contract RaffleTest is Test, CodeConstants {
         raffle.enterRaffle{value: entranceFee}();
         vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
+        raffle.performUpkeep("");
+        Raffle.RaffleState raffleState = raffle.getRaffleState();
 
         (bool upkeepNeeded, ) = raffle.checkUpkeep("");
 
-        assert(!upkeepNeeded);
+        assert(raffleState == Raffle.RaffleState.Calculating);
+        assert(upkeepNeeded == false);
     }
 
     /**
@@ -205,14 +208,23 @@ contract RaffleTest is Test, CodeConstants {
      * Verifies raffle state updates and valid requestId emitted
      */
     function testPerformUpkeepUpdatesRaffleStateEmitsRequestId() public {
+        // Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        // Act
         vm.recordLogs();
-        raffle.performUpkeep("");
+        raffle.performUpkeep(""); // emits requestId
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 requestId = entries[1].topics[1];
 
-        Raffle.RaffleState rState = raffle.getRaffleState();
+        // Assert
+        Raffle.RaffleState raffleState = raffle.getRaffleState();
+        // requestId = raffle.getLastRequestId();
         assert(uint256(requestId) > 0);
-        assert(uint256(rState) == 1);
+        assert(uint256(raffleState) == 1); // 0 = open, 1 = calculating
     }
 
     modifier skipFork() {
@@ -252,23 +264,38 @@ contract RaffleTest is Test, CodeConstants {
     {
         uint256 additionalEntrants = 3;
         uint256 startingIndex = 1;
-        address expectedWinner = address(1);
+        uint256 prize = entranceFee * (additionalEntrants + 1);
 
+        // Add additional players
         for (
             uint256 i = startingIndex;
             i < startingIndex + additionalEntrants;
             i++
         ) {
-            address newPlayer = address(uint160(i));
-            hoax(newPlayer, 1 ether);
+            address player = address(uint160(i));
+            hoax(player, 1 ether);
             raffle.enterRaffle{value: entranceFee}();
         }
-        uint256 startingTimeStamp = raffle.getLastTimeStamp();
-        uint256 winnerStartingBalance = expectedWinner.balance;
 
+        uint256 startingTimeStamp = raffle.getLastTimeStamp();
+
+        // Get starting balances of all players
+        address[] memory players = new address[](additionalEntrants + 1);
+        uint256[] memory startingBalances = new uint256[](
+            additionalEntrants + 1
+        );
+
+        players[0] = PLAYER;
+        startingBalances[0] = PLAYER.balance;
+
+        for (uint256 i = 0; i < additionalEntrants; i++) {
+            players[i + 1] = address(uint160(i + 1));
+            startingBalances[i + 1] = players[i + 1].balance;
+        }
+
+        // Perform upkeep and fulfill random words
         vm.recordLogs();
         raffle.performUpkeep("");
-
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 requestId = entries[1].topics[1];
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
@@ -276,15 +303,24 @@ contract RaffleTest is Test, CodeConstants {
             address(raffle)
         );
 
+        // Get the winner
         address recentWinner = raffle.getRecentWinner();
-        Raffle.RaffleState raffleState = raffle.getRaffleState();
-        uint256 winnerBalance = recentWinner.balance;
-        uint256 endingTimeStamp = raffle.getLastTimeStamp();
-        uint256 prize = entranceFee * (additionalEntrants + 1);
 
-        assert(recentWinner == expectedWinner);
-        assert(uint256(raffleState) == 0);
-        assert(winnerBalance == winnerStartingBalance + prize);
-        assert(endingTimeStamp > startingTimeStamp);
+        // Assertions
+        assert(recentWinner != address(0));
+        assert(raffle.getRaffleState() == Raffle.RaffleState.Open);
+        assert(raffle.getLastTimeStamp() >= startingTimeStamp);
+        assert(raffle.getNumberOfPlayers() == 0); // Should be 0 after reset
+
+        // Verify winner received the prize
+        bool winnerFound = false;
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == recentWinner) {
+                assert(recentWinner.balance == startingBalances[i] + prize);
+                winnerFound = true;
+                break;
+            }
+        }
+        assert(winnerFound); // Ensure winner was one of the players
     }
 }

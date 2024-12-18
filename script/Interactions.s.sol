@@ -132,7 +132,7 @@ contract AddConsumer is Script {
         uint256 subscriptionId,
         address account
     ) public {
-        console2.log("Adding consumer contrct: ", ContractToAddToVrf);
+        console2.log("Adding consumer contract: ", ContractToAddToVrf);
         console2.log("To vrfCoordinator: ", vrfCoordinator);
         console2.log("On chain id: ", block.chainid);
 
