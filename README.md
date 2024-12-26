@@ -64,4 +64,4 @@ This smart contract implements a trustless lottery system where:
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
