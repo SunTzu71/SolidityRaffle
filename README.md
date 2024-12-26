@@ -1,66 +1,67 @@
-## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+# Raffle Smart Contract
 
-Foundry consists of:
+A decentralized lottery system built on Ethereum using Chainlink VRF for verifiable randomness and Chainlink Automation for automated execution.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Overview
 
-## Documentation
+This smart contract implements a trustless lottery system where:
+- Players can enter by paying an entrance fee
+- Winners are selected randomly using Chainlink VRF
+- The lottery automatically runs at regular intervals using Chainlink Automation
+- The entire prize pool is transferred to the winner
 
-https://book.getfoundry.sh/
+## Features
 
-## Usage
+- Fair and verifiable random winner selection
+- Automated lottery execution
+- Configurable entrance fee and time interval
+- Protection against entries during winner selection
+- Full transparency with on-chain transactions
 
-### Build
+## Technical Details
 
-```shell
-$ forge build
-```
+### Key Components
 
-### Test
+- **Chainlink VRF v2.5**: Provides verifiable random numbers for winner selection
+- **Chainlink Automation**: Handles automated lottery execution
+- **State Management**: Uses enum to track lottery states (Open/Calculating)
 
-```shell
-$ forge test
-```
+### Main Functions
 
-### Format
+- `enterRaffle()`: Allows players to enter the lottery by paying the entrance fee
+- `checkUpkeep()`: Verifies if the lottery needs to run
+- `performUpkeep()`: Initiates the winner selection process
+- `fulfillRandomWords()`: Processes the random number and selects winner
 
-```shell
-$ forge fmt
-```
+### View Functions
 
-### Gas Snapshots
+- `getEntranceFee()`: Returns required entrance fee
+- `getRaffleState()`: Returns current lottery state
+- `getRecentWinner()`: Returns address of last winner
+- `getPlayer()`: Returns player address at specific index
+- `getLastTimeStamp()`: Returns timestamp of last lottery completion
+- `getNumberOfPlayers()`: Returns current number of players
 
-```shell
-$ forge snapshot
-```
+## Requirements
 
-### Anvil
+- Solidity ^0.8.19
+- Chainlink VRF Subscription
+- Chainlink Automation Registration
 
-```shell
-$ anvil
-```
+## Security Features
 
-### Deploy
+- Immutable state variables for critical parameters
+- Custom error messages for better gas efficiency
+- State checks to prevent invalid operations
+- Protection against failed transfers
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+## Events
 
-### Cast
+- `RaffleEntered`: Emitted when a player enters
+- `WinnerPicked`: Emitted when a winner is selected
+- `RequestedRaffleWinner`: Emitted when random number is requested
 
-```shell
-$ cast <subcommand>
-```
+## License
 
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+MIT
