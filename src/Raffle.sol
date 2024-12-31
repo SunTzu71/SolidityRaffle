@@ -116,6 +116,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
      * @dev then requests random words from Chainlink VRF to pick winner
      * @dev Sets state to Calculating to prevent new entries during selection
      * @param - ignore
+     *
+     * @dev Slither false positive reentrancy.
+     * requestRandomWords call is to Chainlink VRF, which is a trusted contract.
      */
     function performUpkeep(bytes calldata /*performData*/) external {
         (bool upkeepNeeded, ) = checkUpkeep("");
